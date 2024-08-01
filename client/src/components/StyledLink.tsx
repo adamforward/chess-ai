@@ -6,7 +6,7 @@ const StyledLink = ({ ...props }: ComponentProps<typeof NavLink>) => {
     <NavLink
       className={({ isActive, isPending }) =>
         `
-       text-lg text-slate-200 font-roboto underline-offset-4
+       text-lg font-bold text-slate-200 font-roboto underline-offset-4
         ${
           isPending
             ? "animate-pulse"
