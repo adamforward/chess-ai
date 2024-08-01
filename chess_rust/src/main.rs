@@ -66,12 +66,15 @@ async fn main() -> std::io::Result<()> {
         mongo_collection: collection,
     }));
 
-    HttpServer::new(move || {
+    let server = HttpServer::new(move || {
+
         App::new()
             .app_data(web::Data::new(app_state.clone()))
             .route("/api/move", web::post().to(handle_move))
     })
     .bind("127.0.0.1:8080")?
-    .run()
-    .await
+    .run();
+
+    println!("Server started at 127.0.0.1:8080");
+    server.await
 }
