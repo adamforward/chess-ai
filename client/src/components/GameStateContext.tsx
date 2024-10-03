@@ -12,7 +12,6 @@ import {
 interface GameContextType {
   gameOver: boolean;
   game: Chess;
-  setGame: (value: Chess) => void;
 
   savedGame: string | null;
   setSavedGame: (value: string | null) => void;
@@ -21,6 +20,7 @@ interface GameContextType {
   setPromotion: (value: string) => void;
 
   makeAMove: (move: { from: string; to: string }) => void;
+  makeOpponentMove: () => void;
 
   handleReset: () => void;
 }
@@ -28,9 +28,7 @@ interface GameContextType {
 // Create the context with an undefined initial value
 const GameContext = createContext<GameContextType>({
   gameOver: false,
-
   game: new Chess(),
-  setGame: () => {},
 
   savedGame: null,
   setSavedGame: () => {},
@@ -39,6 +37,7 @@ const GameContext = createContext<GameContextType>({
   setPromotion: () => {},
 
   makeAMove: () => {},
+  makeOpponentMove: () => {},
 
   handleReset: () => {},
 });
@@ -87,6 +86,50 @@ export const GameStateContext: FC<Props> = ({ children }) => {
     [game, promotion]
   );
 
+  const makeOpponentMove = useCallback(async (): Promise<void> => {
+    try {
+      console.log(
+        `num: ${game.moveNumber()}
+        pgn: """${game.pgn()}"""
+
+      `
+      );
+
+      const response = await fetch("http://localhost:8080/next_move", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pgn: "e4e5",
+          user_id: "2",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data: string = await response.json();
+      alert("data: " + data);
+
+      return data; // Assuming the response is a string of the next move
+    } catch (error) {
+      console.log("endpoint failure, resorting to random moves");
+      const possibleMoves = game.moves();
+      if (!game.isGameOver() && !game.isDraw() && possibleMoves.length !== 0) {
+        const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+
+        game.move(possibleMoves[randomIndex]);
+        const updatedGame = new Chess(game.fen());
+        setGame(updatedGame);
+      } else {
+        console.error("AI failed to return move and no random moves:", error);
+        throw error;
+      }
+    }
+  }, [game]);
+
   const handleReset = useCallback(() => {
     setGameOver(false);
     if (savedGame != null) {
@@ -99,13 +142,13 @@ export const GameStateContext: FC<Props> = ({ children }) => {
   }, [game, savedGame]);
 
   // Value to be shared across the app
-  const value: GameContextType = {
+  const value = {
     gameOver,
     game,
-    setGame,
     savedGame,
     setSavedGame,
     makeAMove,
+    makeOpponentMove,
     promotion,
     setPromotion,
     handleReset,

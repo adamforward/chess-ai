@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Chess, PieceSymbol } from "chess.js";
+import { PieceSymbol } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import {
   Piece,
@@ -14,25 +14,13 @@ export default function PlayRandomMoveEngine() {
     gameOver,
     handleReset,
     game,
-    setGame,
     savedGame,
     setSavedGame,
     makeAMove,
+    makeOpponentMove,
     promotion,
     setPromotion,
   } = useGameContext();
-
-  const makeOpponentMove = useCallback(() => {
-    console.log("making random move");
-    const possibleMoves = game.moves();
-    if (game.isGameOver() || game.isDraw() || possibleMoves.length === 0)
-      return;
-    const randomIndex = Math.floor(Math.random() * possibleMoves.length);
-
-    game.move(possibleMoves[randomIndex]);
-    const updatedGame = new Chess(game.fen());
-    setGame(updatedGame);
-  }, [game]);
 
   const onDrop = useCallback(
     (sourceSquare: Square, targetSquare: Square, piece: Piece) => {
@@ -91,8 +79,8 @@ export default function PlayRandomMoveEngine() {
       <div className="w-full flex justify-center gap-4 items-center mt-4">
         <button
           onClick={() => {
-            console.log(game.fen());
-            setSavedGame(game.fen());
+            console.log(game.pgn());
+            setSavedGame(game.pgn());
           }}
           className="border-2 rounded-lg text-center p-2"
         >
