@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { Chess, PieceSymbol } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import {
@@ -6,31 +6,21 @@ import {
   PromotionPieceOption,
   Square,
 } from "react-chessboard/dist/chessboard/types";
+import { useGameContext } from "../GameStateContext";
+import { EndGameOverlay } from "./EndGameOverlay";
 
 export default function PlayRandomMoveEngine() {
-  const [game, setGame] = useState(new Chess());
-
-  const [savedGame, setSavedGame] = useState<string | null>(null);
-
-  const [gameOver, setGameOver] = useState<boolean>(false);
-
-  const [promotion, setPromotion] = useState<string>("q");
-
-  const makeAMove = useCallback(
-    (move: { from: string; to: string }) => {
-      // If the move is valid, update the game state with a new Chess instance
-      console.log("making move");
-      if (move !== null) {
-        game.move({ ...move, promotion }); // Make the move
-        const updatedGame = new Chess(game.fen()); // Create a new Chess instance with the updated FEN
-        setGame(updatedGame); // Update the state with the new instance
-        if (updatedGame.isGameOver() || updatedGame.isDraw()) {
-          setGameOver(true);
-        }
-      }
-    },
-    [game, promotion]
-  );
+  const {
+    gameOver,
+    handleReset,
+    game,
+    setGame,
+    savedGame,
+    setSavedGame,
+    makeAMove,
+    promotion,
+    setPromotion,
+  } = useGameContext();
 
   const makeOpponentMove = useCallback(() => {
     console.log("making random move");
@@ -69,7 +59,7 @@ export default function PlayRandomMoveEngine() {
 
       return true;
     },
-    []
+    [makeAMove, makeOpponentMove]
   );
 
   const onPromotion = useCallback(
@@ -95,13 +85,10 @@ export default function PlayRandomMoveEngine() {
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
+      {gameOver && <EndGameOverlay />}
+
       {/* Developer tools */}
       <div className="w-full flex justify-center gap-4 items-center mt-4">
-        {gameOver && (
-          <div className="absolute bg-white rounded-lg p-4 shadow-md top-1/2">
-            <h1>The game is over, want to restart?</h1>
-          </div>
-        )}
         <button
           onClick={() => {
             console.log(game.fen());
@@ -112,10 +99,7 @@ export default function PlayRandomMoveEngine() {
           Save Game
         </button>
         <button
-          onClick={() => {
-            if (savedGame != null) setGame(new Chess(savedGame));
-            else setGame(new Chess());
-          }}
+          onClick={handleReset}
           className="border-2 rounded-lg text-center p-2"
         >
           Reset

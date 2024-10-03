@@ -2,7 +2,7 @@ import StyledLink from "./StyledLink";
 
 const BottomNav = () => {
   return (
-    <div className="flex gap-12 w-full justify-center mb-2">
+    <div className="flex gap-12 w-full justify-center mb-6">
       <StyledLink to="/">Home</StyledLink>
       <StyledLink to="/about">About</StyledLink>
     </div>
