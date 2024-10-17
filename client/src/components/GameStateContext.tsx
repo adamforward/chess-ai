@@ -74,7 +74,9 @@ export const GameStateContext: FC<Props> = ({ children }) => {
       console.log("making move");
       if (move !== null) {
         game.move({ ...move, promotion }); // Make the move
+
         const updatedGame = new Chess(game.fen()); // Create a new Chess instance with the updated FEN
+        updatedGame.loadPgn(game.pgn());
         setGame(updatedGame); // Update the state with the new instance
 
         if (updatedGame.isGameOver() || updatedGame.isDraw()) {
@@ -93,6 +95,7 @@ export const GameStateContext: FC<Props> = ({ children }) => {
 
       game.move(possibleMoves[randomIndex]);
       const updatedGame = new Chess(game.fen());
+      updatedGame.loadPgn(game.pgn());
       setGame(updatedGame);
     } else {
       console.error(
@@ -102,10 +105,12 @@ export const GameStateContext: FC<Props> = ({ children }) => {
   }, [game]);
 
   const getLongAlgebraicMove = useCallback(() => {
-    const moveNumber = game.moveNumber();
-    const hist = game.history({ verbose: true });
-    console.log("hist", hist);
-    return hist[moveNumber - 1].lan;
+    const hist = game.history({ verbose: true }).reverse();
+    const previousMove = hist.find(({ color }) => color === "w");
+    if (!previousMove) {
+      throw new Error("No previous move found in history");
+    }
+    return previousMove.lan;
   }, [game]);
 
   const makeOpponentMove = useCallback(async (): Promise<void> => {
@@ -140,6 +145,7 @@ export const GameStateContext: FC<Props> = ({ children }) => {
 
       game.move({ from, to });
       const updatedGame = new Chess(game.fen());
+      updatedGame.loadPgn(game.pgn());
       setGame(updatedGame);
     } catch (error) {
       console.error(`endpoint failure [${error}]; Resorting to a random move`);
