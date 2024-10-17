@@ -48,10 +48,11 @@ fn mapping_2(n: usize) -> &'static str {
         _ => "invalid",
     }
 }
+
 pub fn pgn_to_hash(b:&Board, standard_format_move:&str, moves:&AllMovesGenRe)->Move{
     println!("{}", standard_format_move);
 
-    if standard_format_move=="O-O-O"{
+    if standard_format_move=="O-O-O"{ //castling
         return Move {piece:PieceId::K, location:100};
     }
     if standard_format_move=="O-O"{
@@ -61,7 +62,8 @@ pub fn pgn_to_hash(b:&Board, standard_format_move:&str, moves:&AllMovesGenRe)->M
     let rows=vec!["8", "7", "6", "5", "4", "3", "2", "1"];
     let cols=vec!["a", "b", "c", "d", "e", "f", "g", "h"];
     let mut split_sfm=split_string_to_chars(standard_format_move);
-    if split_sfm[split_sfm.len()-1]=="+"{
+    
+    if split_sfm[split_sfm.len()-1]=="+"{ //nothing in my data model for checking
         split_sfm.remove(split_sfm.len()-1);
     }
 
@@ -357,6 +359,7 @@ pub fn process_server_response(pgn:String, last_game:Option<Board>)->ServerProce
     if last_game.is_none() {
 
         if pgn.len()==0{
+            //if 0
             let initial_board=init_board(true);
             let moves=all_moves_gen(&initial_board);
             let moved=ai_move(initial_board.clone());
@@ -394,14 +397,14 @@ fn ai_move(b:Board)->AIMoveRe{
     let mut the_move:Move=Move {piece:PieceId::Error, location:10000};
     let mut re:AIMoveRe=AIMoveRe{b:b.clone(),m:the_move};
     if b.turn%2==0{
-        let mut smallest_mm:f32=10000000000.0;
+        let mut biggest_mm:f32=0.0;
         for i in b.white_piece_ids.iter(){
             for j in av_moves.moves.get_moves(*i).iter(){
                 let searching_b=move_piece(b.clone(), *i,*j);
                 let searching_treenode=TreeNode {game:searching_b.clone(), level:0, parent:None, children:vec![]};
-                let new_mm=search(&Rc::new(RefCell::new(searching_treenode)), 5, 5, -100000000.0, -100000000.0);
-                if smallest_mm>new_mm{
-                    smallest_mm=new_mm;
+                let new_mm=search(&Rc::new(RefCell::new(searching_treenode)), 5, 5, biggest_mm, 1.0);//will tweak depth and width params
+                if new_mm>biggest_mm{
+                    biggest_mm=new_mm;
                     the_move=Move {piece:*i, location:*j};
                     re= AIMoveRe{b:searching_b, m:the_move}
                 }
@@ -410,14 +413,14 @@ fn ai_move(b:Board)->AIMoveRe{
         return re;
     }
     else{
-        let mut smallest_mm:f32=10000000000.0;
+        let mut biggest_mm:f32=0.0;
         for i in b.black_piece_ids.iter(){
             for j in av_moves.moves.get_moves(*i).iter(){
                 let searching_b=move_piece(b.clone(), *i,*j);
                 let searching_treenode=TreeNode {game:searching_b.clone(), level:0, parent:None, children:vec![]};
-                let new_mm=search(&Rc::new(RefCell::new(searching_treenode)), 5, 5, -100000000.0, -100000000.0);
-                if smallest_mm>new_mm{
-                    smallest_mm=new_mm;
+                let new_mm=search(&Rc::new(RefCell::new(searching_treenode)), 5, 5, biggest_mm, 1.0);
+                if biggest_mm<new_mm{
+                    biggest_mm=new_mm;
                     the_move=Move {piece:*i, location:*j};
                     re= AIMoveRe{b:searching_b, m:the_move};
                 }
