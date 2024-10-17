@@ -94,7 +94,7 @@ async fn main() -> std::io::Result<()> {
         counter: Mutex::new(0),
     }));
 
-    let server = HttpServer::new(move || {
+    HttpServer::new(move || {
 
         App::new()
             .app_data(web::Data::new(state.clone()))
