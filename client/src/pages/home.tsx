@@ -1,4 +1,4 @@
-import ChessBoard from "../components/ChessBoard/ChessBoard";
+import { ChessBoard } from "../components/ChessBoard/ChessBoard";
 import SimpleLayout from "../components/SimpleLayout";
 import { GameStateContext } from "../components/GameStateContext";
 

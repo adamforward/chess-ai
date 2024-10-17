@@ -9,7 +9,7 @@ import {
 import { useGameContext } from "../GameStateContext";
 import { EndGameOverlay } from "./EndGameOverlay";
 
-export default function PlayRandomMoveEngine() {
+export function ChessBoard() {
   const {
     gameOver,
     handleReset,
@@ -18,7 +18,6 @@ export default function PlayRandomMoveEngine() {
     setSavedGame,
     makeAMove,
     makeOpponentMove,
-    promotion,
     setPromotion,
   } = useGameContext();
 
@@ -68,7 +67,7 @@ export default function PlayRandomMoveEngine() {
 
       return true;
     },
-    [promotion, setPromotion]
+    [setPromotion]
   );
 
   return (
