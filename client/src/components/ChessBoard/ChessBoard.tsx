@@ -10,16 +10,8 @@ import { useGameContext } from "../GameStateContext";
 import { EndGameOverlay } from "./EndGameOverlay";
 
 export function ChessBoard() {
-  const {
-    gameOver,
-    handleReset,
-    game,
-    savedGame,
-    setSavedGame,
-    makeAMove,
-    makeOpponentMove,
-    setPromotion,
-  } = useGameContext();
+  const { gameOver, game, makeAMove, makeOpponentMove, setPromotion } =
+    useGameContext();
 
   const onDrop = useCallback(
     (sourceSquare: Square, targetSquare: Square, piece: Piece) => {
@@ -73,26 +65,6 @@ export function ChessBoard() {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       {gameOver && <EndGameOverlay />}
-
-      {/* Developer tools */}
-      <div className="w-full flex justify-center gap-4 items-center mt-4">
-        <button
-          onClick={() => {
-            console.log(game.pgn());
-            setSavedGame(game.pgn());
-          }}
-          className="border-2 rounded-lg text-center p-2"
-        >
-          Save Game
-        </button>
-        <button
-          onClick={handleReset}
-          className="border-2 rounded-lg text-center p-2"
-        >
-          Reset
-        </button>
-        <div className="text-xs">Saved Game: {savedGame}</div>
-      </div>
 
       {/* Chessboard */}
       <div className="flex flex-grow items-center justify-center">

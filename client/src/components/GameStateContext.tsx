@@ -13,16 +13,11 @@ interface GameContextType {
   gameOver: boolean;
   game: Chess;
 
-  savedGame: string | null;
-  setSavedGame: (value: string | null) => void;
-
   promotion: string;
   setPromotion: (value: string) => void;
 
   makeAMove: ({ from, to }: { from: string; to: string }) => void;
   makeOpponentMove: () => void;
-
-  handleReset: () => void;
 }
 
 // Create the context with an undefined initial value
@@ -30,16 +25,11 @@ const GameContext = createContext<GameContextType>({
   gameOver: false,
   game: new Chess(),
 
-  savedGame: null,
-  setSavedGame: () => {},
-
   promotion: "q",
   setPromotion: () => {},
 
   makeAMove: () => {},
   makeOpponentMove: () => {},
-
-  handleReset: () => {},
 });
 
 // Custom hook for consuming the context
@@ -61,9 +51,6 @@ export const GameStateContext: FC<Props> = ({ children }) => {
 
   // State to manage the current game state
   const [game, setGame] = useState<Chess>(new Chess());
-
-  // State to manage the saved game state
-  const [savedGame, setSavedGame] = useState<string | null>(null);
 
   const [promotion, setPromotion] = useState<string>("q");
 
@@ -153,28 +140,14 @@ export const GameStateContext: FC<Props> = ({ children }) => {
     }
   }, [game, getLongAlgebraicMove, makeRandomMove]);
 
-  const handleReset = useCallback(() => {
-    setGameOver(false);
-    if (savedGame != null) {
-      console.log("resetting game to saved game");
-      setGame(new Chess(savedGame));
-    } else {
-      game.reset();
-      // setGame();
-    }
-  }, [game, savedGame]);
-
   // Value to be shared across the app
   const value = {
     gameOver,
     game,
-    savedGame,
-    setSavedGame,
     makeAMove,
     makeOpponentMove,
     promotion,
     setPromotion,
-    handleReset,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
