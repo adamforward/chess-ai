@@ -19,7 +19,7 @@ interface GameContextType {
   promotion: string;
   setPromotion: (value: string) => void;
 
-  makeAMove: (move: { from: string; to: string }) => void;
+  makeAMove: ({ from, to }: { from: string; to: string }) => void;
   makeOpponentMove: () => void;
 
   handleReset: () => void;
@@ -86,23 +86,41 @@ export const GameStateContext: FC<Props> = ({ children }) => {
     [game, promotion]
   );
 
+  const makeRandomMove = useCallback(() => {
+    const possibleMoves = game.moves();
+    if (!game.isGameOver() && !game.isDraw() && possibleMoves.length !== 0) {
+      const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+
+      game.move(possibleMoves[randomIndex]);
+      const updatedGame = new Chess(game.fen());
+      setGame(updatedGame);
+    } else {
+      console.error(
+        "There are no possible random moves and the game is not over..."
+      );
+    }
+  }, [game]);
+
+  const getLongAlgebraicMove = useCallback(() => {
+    const moveNumber = game.moveNumber();
+    const hist = game.history({ verbose: true });
+    console.log("hist", hist);
+    return hist[moveNumber - 1].lan;
+  }, [game]);
+
   const makeOpponentMove = useCallback(async (): Promise<void> => {
     try {
-      console.log(
-        `num: ${game.moveNumber()}
-        pgn: """${game.pgn()}"""
-
-      `
-      );
+      const move = getLongAlgebraicMove();
 
       const response = await fetch("http://localhost:8080/next_move", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-type": "application/json; charset=UTF-8",
         },
         body: JSON.stringify({
-          pgn: "e4e5",
-          user_id: "2",
+          // This is not even close to the PGN format. It's LAN...
+          pgn: move,
+          user_id: "1",
         }),
       });
 
@@ -111,24 +129,23 @@ export const GameStateContext: FC<Props> = ({ children }) => {
       }
 
       const data: string = await response.json();
-      alert("data: " + data);
 
-      return data; // Assuming the response is a string of the next move
-    } catch (error) {
-      console.log("endpoint failure, resorting to random moves");
-      const possibleMoves = game.moves();
-      if (!game.isGameOver() && !game.isDraw() && possibleMoves.length !== 0) {
-        const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+      const [from, to] = [data.slice(0, 2), data.slice(2)];
 
-        game.move(possibleMoves[randomIndex]);
-        const updatedGame = new Chess(game.fen());
-        setGame(updatedGame);
-      } else {
-        console.error("AI failed to return move and no random moves:", error);
-        throw error;
+      if (from.length !== 2 || to.length !== 2) {
+        throw new Error(
+          "invalid response from the server resorting to random move"
+        );
       }
+
+      game.move({ from, to });
+      const updatedGame = new Chess(game.fen());
+      setGame(updatedGame);
+    } catch (error) {
+      console.error(`endpoint failure [${error}]; Resorting to a random move`);
+      makeRandomMove();
     }
-  }, [game]);
+  }, [game, getLongAlgebraicMove, makeRandomMove]);
 
   const handleReset = useCallback(() => {
     setGameOver(false);

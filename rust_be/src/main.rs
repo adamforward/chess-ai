@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 use serde::Deserialize;
@@ -92,6 +93,7 @@ async fn handle_move_request(data: web::Data<AppState>, query: web::Json<UserReq
         }
     } else {
         // If the move does not match, return an error
+        println!("could not find next move");
         return HttpResponse::BadRequest().json("Invalid move");
     }
 }
@@ -105,10 +107,17 @@ async fn main() -> std::io::Result<()> {
 
     println!("Server is running on port 8080");
 
+
+
     HttpServer::new(move || {
+        // This was a PITA to figure out RUST RUST CRAB RUST
+        // https://stackoverflow.com/questions/73098788/access-control-allow-origin-missing-using-actix-web
+        let cors = Cors::permissive().allowed_origin("http://localhost:3000");
+
         App::new()
+            .wrap(cors)
             .app_data(state.clone()) // Share state between requests
-            .route("/next_move", web::post().to(handle_move_request)) // Handle the move request
+            .route("/next_move", web::post().to(handle_move_request)) // Route for handling move requests
     })
     .bind("127.0.0.1:8080")?
     .run()
