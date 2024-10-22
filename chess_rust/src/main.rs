@@ -95,6 +95,7 @@ async fn main() -> std::io::Result<()> {
     }));
 
     HttpServer::new(move || {
+
         App::new()
             .app_data(web::Data::new(state.clone()))
             .route("/handle_move", web::post().to(handle_move))
